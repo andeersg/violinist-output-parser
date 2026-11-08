@@ -1,0 +1,40 @@
+name: Violinist output parser
+description: Turns the Violinist JSON debug log into a readable report and job summary.
+branding:
+  icon: music
+  color: purple
+
+inputs:
+  env:
+    description: Name of the environment variable holding the Violinist JSON output (set by the Violinist step).
+    default: JSON_OUTPUT
+  file:
+    description: Optional. Path to a file with the JSON output; takes precedence over `env`.
+    required: false
+  json:
+    description: Optional. The JSON output as a string; takes precedence over `env`.
+    required: false
+  summary:
+    description: Write a Markdown report to the job summary.
+    default: "true"
+  show-other:
+    description: Print unclassified (non-noise) messages in a collapsed group.
+    default: "true"
+  annotate-warnings:
+    description: Also create warning annotations (errors are always annotated).
+    default: "false"
+  fail-on-error:
+    description: Fail the step if Violinist logged any errors.
+    default: "false"
+
+outputs:
+  updates-count:
+    description: Number of available updates Violinist found.
+  advisories-count:
+    description: Number of security advisories found.
+  errors-count:
+    description: Number of error entries in the log.
+
+runs:
+  using: node24
+  main: index.js

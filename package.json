@@ -1,0 +1,11 @@
+{
+  "name": "violinist-output-parser",
+  "version": "1.0.0",
+  "description": "GitHub Action that turns Violinist's JSON debug output into a readable report",
+  "main": "index.js",
+  "bin": { "violinist-output-parser": "index.js" },
+  "scripts": {
+    "start": "node index.js example.json"
+  },
+  "license": "MIT"
+}
