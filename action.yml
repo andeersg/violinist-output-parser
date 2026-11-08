@@ -4,15 +4,18 @@ branding:
   icon: music
   color: purple
 
+# This is a composite action on purpose. The Violinist output is often bigger than
+# Linux's 128 KB limit for a single environment variable. A JavaScript action gets
+# its inputs as INPUT_* env vars and would fail with "Argument list too long".
+# Composite actions don't export inputs as env vars. `${{ inputs.json }}` below is
+# pasted into the generated script file, so the size doesn't matter.
+
 inputs:
-  env:
-    description: Name of the environment variable holding the Violinist JSON output (set by the Violinist step).
-    default: JSON_OUTPUT
-  file:
-    description: Optional. Path to a file with the JSON output; takes precedence over `env`.
-    required: false
   json:
-    description: Optional. The JSON output as a string; takes precedence over `env`.
+    description: "The Violinist JSON output, e.g. `${{ steps.update.outputs.json }}`."
+    required: false
+  file:
+    description: Path to a file containing the Violinist JSON output (alternative to `json`).
     required: false
   summary:
     description: Write a Markdown report to the job summary.
@@ -30,11 +33,30 @@ inputs:
 outputs:
   updates-count:
     description: Number of available updates Violinist found.
+    value: ${{ steps.parse.outputs.updates-count }}
   advisories-count:
     description: Number of security advisories found.
+    value: ${{ steps.parse.outputs.advisories-count }}
   errors-count:
     description: Number of error entries in the log.
+    value: ${{ steps.parse.outputs.errors-count }}
 
 runs:
-  using: node24
-  main: index.js
+  using: composite
+  steps:
+    - id: parse
+      shell: bash
+      env:
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_SHOW-OTHER: ${{ inputs.show-other }}
+        INPUT_ANNOTATE-WARNINGS: ${{ inputs.annotate-warnings }}
+        INPUT_FAIL-ON-ERROR: ${{ inputs.fail-on-error }}
+      run: |
+        if [ -z "$INPUT_FILE" ]; then
+          export INPUT_FILE="$RUNNER_TEMP/violinist-output-$GITHUB_RUN_ID-$RANDOM.json"
+          cat > "$INPUT_FILE" <<'VIOLINIST_OUTPUT_PARSER_END_OF_JSON_7Q2XK9'
+        ${{ inputs.json }}
+        VIOLINIST_OUTPUT_PARSER_END_OF_JSON_7Q2XK9
+        fi
+        node "$GITHUB_ACTION_PATH/index.js"

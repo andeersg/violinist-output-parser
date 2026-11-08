@@ -86,6 +86,7 @@ function readRaw() {
 }
 
 function parse(raw) {
+  if (!raw || !raw.trim()) throw new Error('The Violinist output is empty (did the Violinist step run?).');
   try {
     return JSON.parse(raw);
   } catch (e) {

@@ -12,25 +12,37 @@ It prints this to the log and writes a Markdown version to the **job summary**.
 
 ## Usage
 
-The Violinist step sets `$JSON_OUTPUT`, and this action reads it by default, so add it right after:
+Pass the `json` output of `violinist-dev/update-action` straight in:
 
 ```yaml
-- name: Run Violinist
-  # ...your existing violinist step...
+- uses: violinist-dev/update-action@1.x
+  id: update
+  with:
+    php_version: "8.3"
+  env:
+    USER_TOKEN: ${{ secrets.GH_PRIVATE_USER_TOKEN }}
+    PROJECT_URL: ${{ github.repositoryUrl }}
+    LICENCE_KEY: ${{ secrets.VIOLINIST_LICENSE }}
 
 - name: Violinist report
+  if: always()
   uses: andeersg/violinist-output-parser@v1
+  with:
+    json: ${{ steps.update.outputs.json }}
 ```
 
-This replaces the old `echo "$JSON_OUTPUT" > /tmp/output && cat /tmp/output | jq` step.
+> **Don't** put the output in an environment variable (`env: JSON_OUTPUT: ${{ steps.update.outputs.json }}`).
+> Linux limits one env var to 128 KB, so big runs fail with "Argument list too long" before any code runs.
+> This is a composite action, so `json` reaches the script without going through the environment.
+
+Requires `node` on the runner. It's preinstalled on GitHub-hosted runners.
 
 ### Inputs
 
 | Input | Default | Description |
 |---|---|---|
-| `env` | `JSON_OUTPUT` | Name of the env var that holds the JSON |
-| `file` |  | Path to a JSON file instead (takes precedence) |
-| `json` |  | JSON as a string instead (takes precedence) |
+| `json` |  | The Violinist output (`${{ steps.update.outputs.json }}`) |
+| `file` |  | Path to a JSON file instead |
 | `summary` | `true` | Write the job summary |
 | `show-other` | `true` | Show unclassified messages in a collapsed group |
 | `annotate-warnings` | `false` | Also annotate warnings |
@@ -44,6 +56,5 @@ This replaces the old `echo "$JSON_OUTPUT" > /tmp/output && cat /tmp/output | jq
 
 ```sh
 node index.js example.json
-JSON_OUTPUT="$(cat example.json)" node index.js
 cat output.json | node index.js
 ```
