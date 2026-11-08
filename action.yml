@@ -12,7 +12,7 @@ branding:
 
 inputs:
   json:
-    description: "The Violinist JSON output, e.g. `${{ steps.update.outputs.json }}`."
+    description: The Violinist JSON output, i.e. the `json` output of violinist-dev/update-action.
     required: false
   file:
     description: Path to a file containing the Violinist JSON output (alternative to `json`).
